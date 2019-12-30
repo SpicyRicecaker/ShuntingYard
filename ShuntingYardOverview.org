@@ -1,0 +1,44 @@
+#+TITLE: Shunting Yard Overview
+#+DESCRIPTION: A short document going over what the desired end product is and possible ways to implement
+
+* What Should Shunting Yard Do?
+  1. Take in (normal) mathematical expression w/ (+,-,*,/,#,^,())
+  2. Convert into postfix notation
+  3. Turn postfix notation into expression tree
+  4. Let the user choose the desired end expression (infix, prefix, or postfix) and print using the expression tree
+
+* What is postfix notation?
+  - Operators (+,-,etc.) are written after operands (#s)
+  - E.g. A * (B + C) / D (infix) = A B C + * D /
+
+* What is infix notation?
+  - The "normal" way expressions are written
+  - Operators are in-between operands
+
+* What is prefix notation?
+  - Operators are written before operands
+  - Use the two values closest to the right
+  - The most confusing by far
+
+* Converting from infix to postfix
+  1. Add operands to the output always
+  2. What to do with operator?
+     1. If it is opening parentheses, push to stack
+     2. If the evaluated operator is of equal or lower precedence than the operator on top of the stack, keep popping to output until it is of lower precedence, then push to stack
+     3. If it is an ending parentheses, keep popping inbetween operators to output until after the opening parentheses is reached
+  3. If at the end of the expression, pop everything in the stack to output
+
+* Implementation (Discounting expression tree)
+** Implementing stack first
+   - We have to add from right to left, so that after removing something we can get the next head
+   - Only need SHead
+** What will it be stored to?
+   - A standard linked list. SLHead.
+** I/O 
+   - Simple expression of char array to pass in at the beginning [a+b*c+d]
+   - printList() function for debugging
+   - Then implement parentheses [(a+b)*(c-d)]
+
+* Things to keep in mind
+  - Atoi!
+  - Input is still as hard to get as ever!
