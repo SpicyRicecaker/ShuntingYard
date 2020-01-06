@@ -1,26 +1,26 @@
-#ifndef SNODE_H
-#define SNODE_H
+#ifndef STNODE_H
+#define STNODE_H
 
 #include <iostream>
 #include <cstring>
 
-class SNode {
+class StNode {
  public:
   //Constructor and destructor
-  SNode(char*);
-  ~SNode();
+  StNode(char);
+  ~StNode();
 
   //Getting and setting next node
-  SNode* getNext();
-  void setNext(SNode*);
+  StNode* getNext();
+  void setNext(StNode*);
 
   //Getting and setting stored value (may not need)
   char* getValue();
-  void setValue(char*);
+  void setValue(char);
 
  private:
   //Node points to next node and holds a value
-  SNode* next;
+  StNode* next;
   char* value;
 };
 #endif

@@ -3,17 +3,17 @@
 
 * What Should Shunting Yard Do?
   1. Take in (normal) mathematical expression w/ (+,-,*,/,#,^,())
-  2. Convert into postfix notation
-  3. Turn postfix notation into expression tree
-  4. Let the user choose the desired end expression (infix, prefix, or postfix) and print using the expression tree
+  2. Convert into post-fix notation
+  3. Turn post-fix notation into expression tree
+  4. Let the user choose the desired end expression (infix, prefix, or post-fix) and print using the expression tree
 
-* What is postfix notation?
+* What is post-fix notation?
   - Operators (+,-,etc.) are written after operands (#s)
   - E.g. A * (B + C) / D (infix) = A B C + * D /
 
 * What is infix notation?
-  - The "normal" way expressions are written
-  - Operators are in-between operands
+  - The "normal" way expressions are 
+ - Operators are in-between operands
 
 * What is prefix notation?
   - Operators are written before operands
