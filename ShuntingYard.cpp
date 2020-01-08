@@ -4,13 +4,14 @@
 #include "BNode.h"
 
 void pushStack(char value, StNode* &current);
-char popStack(StNode* &current);
+char popStack(StNode* &past, StNode* &current);
+char peepStack(StNode* &current);
 void printStack(StNode* current, StNode* head);
 void addBi();
 void printBi();
 void getInput(char* &inptr);
 void convExp2Post(char* inptr, StNode* &operatorHead, StNode* &postfixHead);
-int findPrio(char n);
+int getPrio(char n);
 
 using namespace std;
 
@@ -56,13 +57,44 @@ void getInput(char* &inptr){
   }
 }
 
-void convExp2Post(char* input, StNode* &opHeadptr, StNode* &poHeadptr){
-  for(int a = 0; a < strlen(input); ++a){
+void convExp2Post(char* input, StNode* &operatorHead, StNode* &postfixHead){
+  int inlength = strlen(input);
+  //For every character in the infix expression
+  for(int a = 0; inlength; ++a){
+    //Check if it is a digit OR OPEN PARETHESIS
+    if(isdigit(input[a]) || input[a] == '('){
+      //Push to the postfix stack if it is
+      pushStack(input[a], postfixHead);
+    }else{ //Otherwise if the operator stack is empty, add it
+      if(operatorHead == NULL){
+        pushStack(input[a], postfixHead);
+      }
+      //If it is a close parenthesis, keep adding operator stack to postfix until open parenthesis
+      if(input[a] == ')'){
+        
+      }
+      //Otherwise if it is an operator, get its prio and compare it with the operator stack. If the prio is greater, then add it, if it is less, then we need to keep on ejecting operators until a lower prio is found or we reach the end of the stack
+      while(getPrio(input[a]) <= peepStack(operatorHead)){
+        pushStack(popStack(operatorHead, operatorHead), postfixHead);
+      }
+      pushStack(input[a], operatorHead);
+    }
     
+    //If we've reached the end of the infix expression / it is empty, output the entire operator stack into the prefix expression
+    while(peepStack(operatorHead)){
+      
+    }
   }
 }
 
-int findPrio(char n){
+int getPrio(char n){
+  if(n == '+' || n == '-'){
+    return 2;
+  }else if(n == '*' || n == '/'){
+    return 3;
+  }else if(n == '^'){
+    return 4;
+  }
   return 1;
 }
 
@@ -79,15 +111,35 @@ void pushStack(char value, StNode* &current){
   }
 }
 
-char popStack(StNode* &current){
+//To popStack EFFICIENTLY
+//We need to go through out entire stack from the head, or the beginning
+//We pass in the one before as a temp node, to avoid the overhead of having to scan forward every time
+char popStack(StNode* &past, StNode* &current){
   if(current == NULL){
     return '\0';
   }
   if(current->getNext() != NULL){
     StNode* nn = current->getNext();
-    popStack(nn);
+    return popStack(current, nn);
   }else{
-    
+    char t = *(current->getValue());
+    delete current;
+    current = NULL;
+    past->setNext(NULL);
+    return t;
+  }
+}
+
+char peepStack(StNode* &current){
+  if(current == NULL){
+
+    return '\0';
+  }
+  if(current->getNext() != NULL){
+    StNode* temp = current->getNext();
+    return peepStack(temp);
+  }else{
+    return *(current->getValue());
   }
 }
 
@@ -103,3 +155,6 @@ void printStack(StNode* current, StNode* head){
     printStack(head, current->getNext());
   }
 }
+
+
+
