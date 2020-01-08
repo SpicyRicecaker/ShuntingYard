@@ -9,6 +9,7 @@ char peepStack(StNode* &current);
 void printStack(StNode* current, StNode* head);
 void addBi();
 void printBi();
+//void promptUser();
 void getInput(char* &inptr);
 void convExp2Post(char* inptr, StNode* &operatorHead, StNode* &postfixHead);
 int getPrio(char n);
@@ -30,6 +31,7 @@ int main(){
   
   //Main program loop, get user input, convert into postfix, ask for desired output, then output
   while(running){
+    cout << "Please enter an infix expression..." << endl;
     //First, get expression input
     getInput(inptr);
    //Then, convert into postfix
@@ -80,9 +82,9 @@ void convExp2Post(char* input, StNode* &operatorHead, StNode* &postfixHead){
       pushStack(input[a], operatorHead);
     }
     
-    //If we've reached the end of the infix expression / it is empty, output the entire operator stack into the prefix expression
-    while(peepStack(operatorHead)){
-      
+    //If we've reached the end of the infix expression || it is empty, output the entire operator stack into the prefix expression
+    while(peepStack(operatorHead) != '\0'){
+      pushStack(popStack(operatorHead, operatorHead), postfixHead);
     }
   }
 }
@@ -155,6 +157,3 @@ void printStack(StNode* current, StNode* head){
     printStack(head, current->getNext());
   }
 }
-
-
-
