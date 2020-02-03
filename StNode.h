@@ -7,7 +7,7 @@
 class StNode {
  public:
   //Constructor and destructor
-  StNode(char);
+  StNode(char*);
   ~StNode();
 
   //Getting and setting next node
@@ -16,7 +16,7 @@ class StNode {
 
   //Getting and setting stored value (may not need)
   char* getValue();
-  void setValue(char);
+  void setValue(char*);
 
  private:
   //Node points to next node and holds a value

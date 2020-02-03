@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2019-12-29 Sun 17:11 -->
+<!-- 2020-01-29 Wed 13:27 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Shunting Yard Overview</title>
@@ -199,7 +199,7 @@
 @licstart  The following is the entire license notice for the
 JavaScript code in this tag.
 
-Copyright (C) 2012-2019 Free Software Foundation, Inc.
+Copyright (C) 2012-2020 Free Software Foundation, Inc.
 
 The JavaScript code in this tag is free software: you can
 redistribute it and/or modify it under the terms of the GNU
@@ -248,57 +248,62 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgdfb40c7">1. What Should Shunting Yard Do?</a></li>
-<li><a href="#org929a06d">2. What is postfix notation?</a></li>
-<li><a href="#orgf03ce8f">3. What is infix notation?</a></li>
-<li><a href="#orgbd953c5">4. What is prefix notation?</a></li>
-<li><a href="#org05b2747">5. Converting from infix to postfix</a></li>
-<li><a href="#orgdda1d4f">6. Implementation (Discounting expression tree)</a>
+<li><a href="#org6eb9329">1. What Should Shunting Yard Do?</a></li>
+<li><a href="#org2584498">2. What is post-fix notation?</a></li>
+<li><a href="#org4aabaa6">3. What is infix notation?</a></li>
+<li><a href="#org0910083">4. What is prefix notation?</a></li>
+<li><a href="#orgfb7339e">5. Converting from infix to postfix</a></li>
+<li><a href="#orgd70bf60">6. Implementation (Discounting expression tree)</a>
 <ul>
-<li><a href="#org436a46b">6.1. Implementing stack first</a></li>
-<li><a href="#org20f830c">6.2. What will it be stored to?</a></li>
-<li><a href="#org98e817d">6.3. I/O</a></li>
+<li><a href="#orgc569484">6.1. Implementing stack first</a></li>
+<li><a href="#org7ea347c">6.2. What will it be stored to?</a></li>
+<li><a href="#orgb5724d9">6.3. I/O</a></li>
 </ul>
 </li>
-<li><a href="#org7f3bf80">7. Things to keep in mind</a></li>
+<li><a href="#org92a39bc">7. Things to keep in mind</a></li>
+<li><a href="#org27a97f8">8. Cleanup on Old Code</a></li>
+<li><a href="#orgee2b4c7">9. Need to Implement</a></li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orgdfb40c7" class="outline-2">
-<h2 id="orgdfb40c7"><span class="section-number-2">1</span> What Should Shunting Yard Do?</h2>
+<div id="outline-container-org6eb9329" class="outline-2">
+<h2 id="org6eb9329"><span class="section-number-2">1</span> What Should Shunting Yard Do?</h2>
 <div class="outline-text-2" id="text-1">
 <ol class="org-ol">
-<li>Take in (normal) mathematical expression w/ (+,-,*,/,#,^,())</li>
-<li>Convert into postfix notation</li>
-<li>Turn postfix notation into expression tree</li>
-<li>Let the user choose the desired end expression (infix, prefix, or postfix) and print using the expression tree</li>
+<li>Take in infix (normal) mathematical expressio
+<ul class="org-ul">
+<li>Includes #s (numbers), + , - , * , / , ^ , ()</li>
+</ul></li>
+<li>Convert into post-fix notation</li>
+<li>Turn post-fix notation into expression tree</li>
+<li>Let the user choose the desired end expression (infix, prefix, or post-fix) and print using the expression tree</li>
 </ol>
 </div>
 </div>
 
-<div id="outline-container-org929a06d" class="outline-2">
-<h2 id="org929a06d"><span class="section-number-2">2</span> What is postfix notation?</h2>
+<div id="outline-container-org2584498" class="outline-2">
+<h2 id="org2584498"><span class="section-number-2">2</span> What is post-fix notation?</h2>
 <div class="outline-text-2" id="text-2">
 <ul class="org-ul">
-<li>Operators (+,-,etc.) are written after operands (#s)</li>
+<li>Operators (+ , - , etc.) are written after operands (#s)</li>
 <li>E.g. A * (B + C) / D (infix) = A B C + * D /</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orgf03ce8f" class="outline-2">
-<h2 id="orgf03ce8f"><span class="section-number-2">3</span> What is infix notation?</h2>
+<div id="outline-container-org4aabaa6" class="outline-2">
+<h2 id="org4aabaa6"><span class="section-number-2">3</span> What is infix notation?</h2>
 <div class="outline-text-2" id="text-3">
 <ul class="org-ul">
 <li>The "normal" way expressions are written</li>
-<li>Operators are in-between operands</li>
+<li>Operators are placed in-between operands</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orgbd953c5" class="outline-2">
-<h2 id="orgbd953c5"><span class="section-number-2">4</span> What is prefix notation?</h2>
+<div id="outline-container-org0910083" class="outline-2">
+<h2 id="org0910083"><span class="section-number-2">4</span> What is prefix notation?</h2>
 <div class="outline-text-2" id="text-4">
 <ul class="org-ul">
 <li>Operators are written before operands</li>
@@ -308,8 +313,8 @@ for the JavaScript code in this tag.
 </div>
 </div>
 
-<div id="outline-container-org05b2747" class="outline-2">
-<h2 id="org05b2747"><span class="section-number-2">5</span> Converting from infix to postfix</h2>
+<div id="outline-container-orgfb7339e" class="outline-2">
+<h2 id="orgfb7339e"><span class="section-number-2">5</span> Converting from infix to postfix</h2>
 <div class="outline-text-2" id="text-5">
 <ol class="org-ol">
 <li>Add operands to the output always</li>
@@ -324,12 +329,12 @@ for the JavaScript code in this tag.
 </div>
 </div>
 
-<div id="outline-container-orgdda1d4f" class="outline-2">
-<h2 id="orgdda1d4f"><span class="section-number-2">6</span> Implementation (Discounting expression tree)</h2>
+<div id="outline-container-orgd70bf60" class="outline-2">
+<h2 id="orgd70bf60"><span class="section-number-2">6</span> Implementation (Discounting expression tree)</h2>
 <div class="outline-text-2" id="text-6">
 </div>
-<div id="outline-container-org436a46b" class="outline-3">
-<h3 id="org436a46b"><span class="section-number-3">6.1</span> Implementing stack first</h3>
+<div id="outline-container-orgc569484" class="outline-3">
+<h3 id="orgc569484"><span class="section-number-3">6.1</span> Implementing stack first</h3>
 <div class="outline-text-3" id="text-6-1">
 <ul class="org-ul">
 <li>We have to add from right to left, so that after removing something we can get the next head</li>
@@ -337,16 +342,16 @@ for the JavaScript code in this tag.
 </ul>
 </div>
 </div>
-<div id="outline-container-org20f830c" class="outline-3">
-<h3 id="org20f830c"><span class="section-number-3">6.2</span> What will it be stored to?</h3>
+<div id="outline-container-org7ea347c" class="outline-3">
+<h3 id="org7ea347c"><span class="section-number-3">6.2</span> What will it be stored to?</h3>
 <div class="outline-text-3" id="text-6-2">
 <ul class="org-ul">
 <li>A standard linked list. SLHead.</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org98e817d" class="outline-3">
-<h3 id="org98e817d"><span class="section-number-3">6.3</span> I/O</h3>
+<div id="outline-container-orgb5724d9" class="outline-3">
+<h3 id="orgb5724d9"><span class="section-number-3">6.3</span> I/O</h3>
 <div class="outline-text-3" id="text-6-3">
 <ul class="org-ul">
 <li>Simple expression of char array to pass in at the beginning [a+b*c+d]</li>
@@ -357,8 +362,8 @@ for the JavaScript code in this tag.
 </div>
 </div>
 
-<div id="outline-container-org7f3bf80" class="outline-2">
-<h2 id="org7f3bf80"><span class="section-number-2">7</span> Things to keep in mind</h2>
+<div id="outline-container-org92a39bc" class="outline-2">
+<h2 id="org92a39bc"><span class="section-number-2">7</span> Things to keep in mind</h2>
 <div class="outline-text-2" id="text-7">
 <ul class="org-ul">
 <li>Atoi!</li>
@@ -366,9 +371,27 @@ for the JavaScript code in this tag.
 </ul>
 </div>
 </div>
+<div id="outline-container-org27a97f8" class="outline-2">
+<h2 id="org27a97f8"><span class="section-number-2">8</span> Cleanup on Old Code</h2>
+<div class="outline-text-2" id="text-8">
+<ul class="org-ul">
+<li>Add support for multiple digit ints, aka split by spaces</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgee2b4c7" class="outline-2">
+<h2 id="orgee2b4c7"><span class="section-number-2">9</span> Need to Implement</h2>
+<div class="outline-text-2" id="text-9">
+<ul class="org-ul">
+<li>Postfix expression to expression tree</li>
+<li>User input for choice of output</li>
+<li>Prefix, Postfix, and Infix output</li>
+</ul>
+</div>
+</div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2019-12-29 Sun 17:11</p>
+<p class="date">Created: 2020-01-29 Wed 13:27</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

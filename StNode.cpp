@@ -2,9 +2,9 @@
 #include <cstring>
 #include "StNode.h"
 
-StNode::StNode(char newValue){
-  value = new char;
-  *value = newValue;
+StNode::StNode(char* newValue){
+  value = new char[strlen(newValue)];
+  strcpy(value, newValue);
 
   next = NULL;
 }
@@ -26,8 +26,8 @@ char* StNode::getValue(){
   return value;
 }
 
-void StNode::setValue(char newValue){
-  *value = newValue;
+void StNode::setValue(char* newValue){
+  strcpy(value, newValue);
 }
 
 
