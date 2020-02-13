@@ -10,7 +10,7 @@ StNode::StNode(char* newValue){
 }
 
 StNode::~StNode(){
-  delete value;
+  delete[] value;
   value = NULL;
 }
 

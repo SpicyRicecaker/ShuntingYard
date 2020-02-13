@@ -1,18 +1,20 @@
 #include <iostream>
 #include <cstring>
+#include <vector>
+#include <iterator>
 #include "StNode.h"
 #include "BNode.h"
 
-void pushStack(char* value, StNode*& current);
-char popStack(StNode* &past, StNode* &current);
-char peepStack(StNode* current);
-void printStack(StNode* current);
+void pushStack(char* value, StNode*& current); // Push stack should be char*
+char* popStack(StNode* &past, StNode* &current); // Pop stack should be char*
+char* peepStack(StNode* current); // Peep stack should be char*
+void printStack(StNode* current); // Print stack should be char*
 //void addBi();
 //void printBi();
 //void promptUser();
-void getInput(char* &inptr);
+void getInput(char* &inptr); 
 void convExp2Post(char* inptr, StNode* &operatorHead, StNode* &postfixHead);
-int getPrio(char n);
+int getPrio(char n); // Get prio should deal with char
 
 using namespace std;
 
@@ -62,44 +64,59 @@ void getInput(char* &inptr){
 }
 
 void convExp2Post(char* input, StNode* &operatorHead, StNode* &postfixHead){
-  //Have a temporary buffer to store operators and operands between spaces
-  char buf[999];
-  char* buffer = &buf[0];
+  //Vector that will be used to buffer input
+  vector<char> buf;
   //Find the length of the infix expression
   int inlength = strlen(input);
   //For every character in the infix expression
   for(int a = 0; a < inlength; ++a){
-    char x = input[a];
-    if(x == ' '){
-      //Check if it is a digit
-      if(isdigit(input[a])){
-        //Push to the postfix stack if it is
-        pushStack(input[a], postfixHead);
-      }else if (input[a] == ' '){
-        continue;
-      }else if (operatorHead == NULL){ //Otherwise if the operator stack is empty, add the current charater
-        pushStack(input[a], operatorHead);
-      }else if(input[a] == '('){  //If it is an open  parenthesis, just add it to the operator stack
-        pushStack(input[a], operatorHead);
-      }else if(input[a] == ')'){
-        //Eject until the open parenthesis
-      }else { 
-        //Otherwise if it is an operator, get its prio and compare it with the operator stack. If the prio is greater, then add it, if it is less, then we need to keep on ejecting operators until a lower prio is found or we reach the end of the stack
-        while(getPrio(input[a]) <= getPrio(peepStack(operatorHead))){
-          pushStack(popStack(operatorHead, operatorHead), postfixHead);
-        }
-        pushStack(input[a], operatorHead);
-      }
+    if(a == inlength -1){
+      i
+        asd
+        f
+        asdf
+        asdf
+
+
+        
     }
-  } else{
+    if(input[a] == ' '){
+      //If it does, then convert to a number, push to postfix, and clear the buffer
+      vector<char>::iterator it;
+      char temp[buf.size()+1];
       int counter = 0;
-      for(int b = a; b <= a; ++b){
-        buffer[counter] = input[b];
+      for(it = buf.begin(); it != buf.end(); ++it){
+        temp[counter] = *(it);
         ++counter;
       }
+      temp[buf.size()] = '\0';
+      buf.clear();
+      if(isdigit(temp[0])){ //Check if the buffer currently holds a number
+        pushStack(temp, postfixHead);
+      }else if (operatorHead == NULL){ //Otherwise if the operator stack is empty, add the current charater
+        pushStack(temp, operatorHead);
+      }else if(input[a] == '('){  //If it is an open  parenthesis, just add it to the operator stack
+        pushStack(temp, operatorHead);
+      }else if(input[a] == ')'){
+        //Eject until the open parenthesis
+        while(peepStack(operatorHead)[0] != '('){
+          popStack(operatorHead, operatorHead);
+        }
+        buf.clear();
+      }else {
+        //Otherwise if it is an operator, get its prio and compare it with the operator stack. If the prio is greater, then add it, if it is less, then we need to keep on ejecting operators until a lower prio is found or we reach the end of the stack
+        while(getPrio(input[a]) <= getPrio(peepStack(operatorHead)[0])){
+          pushStack(popStack(operatorHead, operatorHead), postfixHead);
+        }
+        pushStack(temp, operatorHead);
+      }
+    } else {
+      buf.push_back(input[a]);
+      cout << "pushing back " << input[a] << endl;
     }
+  }
   //If we've reached the end of the infix expression || it is empty, output the entire operator stack into the prefix expression
-  while(peepStack(operatorHead) != '\0'){
+  while(peepStack(operatorHead) != NULL){
     pushStack(popStack(operatorHead, operatorHead), postfixHead);
   }
 }
@@ -131,15 +148,15 @@ void pushStack(char* value, StNode* &current){
 //To popStack EFFICIENTLY
 //We need to go through out entire stack from the head, or the beginning
 //We pass in the one before as a temp node, to avoid the overhead of having to scan forward every time
-char popStack(StNode* &past, StNode* &current){
+char* popStack(StNode* &past, StNode* &current){
   if(current == NULL){
-    return '\0';
+    return NULL;
   }
   if(current->getNext() != NULL){
     StNode* n = current->getNext();
     return popStack(current, n);
   }else{
-    char t = *(current->getValue());
+    char* t = current->getValue();
     past->setNext(NULL);
     delete current;
     current = NULL;
@@ -147,15 +164,15 @@ char popStack(StNode* &past, StNode* &current){
   }
 }
 
-char peepStack(StNode* current){
+char* peepStack(StNode* current){
   if(current == NULL){
-    return '\0';
+    return NULL;
   }
   if(current->getNext() != NULL){
     StNode* n = current->getNext();
     return peepStack(n);
   }else{
-    return *(current->getValue());
+    return current->getValue();
   }
 }
 
@@ -164,7 +181,7 @@ void printStack(StNode* current){
     cout << "Empty stack" << endl;
     return;
   }
-  cout << *(current->getValue()) << " ";
+  cout << current->getValue() << " ";
   if(current->getNext() != NULL){
     StNode* n = current->getNext();
     printStack(n);
