@@ -3,9 +3,8 @@
 #include "StNode.h"
 
 StNode::StNode(char* newValue){
-  value = new char[strlen(newValue)];
+  value = new char[strlen(newValue)+1];
   strcpy(value, newValue);
-
   next = NULL;
 }
 

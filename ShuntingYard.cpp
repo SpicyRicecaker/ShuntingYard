@@ -1,3 +1,5 @@
+//USE DELIM + () TO DECLAR VECTORS
+
 #include <iostream>
 #include <cstring>
 #include <vector>
@@ -12,8 +14,10 @@ void printStack(StNode* current); // Print stack should be char*
 //void addBi();
 //void printBi();
 //void promptUser();
-void getInput(char* &inptr); 
-void convExp2Post(char* inptr, StNode* &operatorHead, StNode* &postfixHead);
+void getInput(char* &inptr);
+void splitInput (std::vector<char*>*in_split_ptr, char* inptr, char delim);
+void debugPrintVector(std::vector<char*>*in_split_ptr);
+void convExp2Post(std::vector<char*>*in_split_ptr, StNode* &operatorHead, StNode* &postfixHead);
 int getPrio(char n); // Get prio should deal with char
 
 using namespace std;
@@ -23,6 +27,10 @@ int main(){
   //Setup input
   char in[999];
   char* inptr = &in[0];
+
+  //Vector used to store the split input
+  vector<char*> in_split;
+  vector<char*>* in_split_ptr = &in_split;
 
   //Stack for postfix operators while converting
   StNode* operatorHead = NULL;
@@ -38,10 +46,16 @@ int main(){
     //First, get expression input
     getInput(inptr);
     //We need someway to split the operands and operators of the input by spaces
+    splitInput(in_split_ptr, inptr, ' ');
+
+    //debug
+    debugPrintVector(in_split_ptr);
+
     //Then, convert into postfix
-    convExp2Post(inptr, operatorHead, postfixHead);//
+    convExp2Post(in_split_ptr, operatorHead, postfixHead);
     //Debug
-    printStack(postfixHead);//
+    cout << "Final result: ";
+    printStack(postfixHead);
     //Then, get what the user wants to convert it into **l8r
     //getInput(inptr);
     //Then, convert into what ever that is **l8r
@@ -63,62 +77,37 @@ void getInput(char* &inptr){
   }
 }
 
-void convExp2Post(char* input, StNode* &operatorHead, StNode* &postfixHead){
-  //Vector that will be used to buffer input
-  vector<char> buf;
-  //Find the length of the infix expression
-  int inlength = strlen(input);
-  //For every character in the infix expression
-  for(int a = 0; a < inlength; ++a){
-    if(a == inlength -1){
-      i
-        asd
-        f
-        asdf
-        asdf
-
-
-        
-    }
-    if(input[a] == ' '){
-      //If it does, then convert to a number, push to postfix, and clear the buffer
-      vector<char>::iterator it;
-      char temp[buf.size()+1];
-      int counter = 0;
-      for(it = buf.begin(); it != buf.end(); ++it){
-        temp[counter] = *(it);
-        ++counter;
+void convExp2Post(std::vector<char*>*in_split_ptr, StNode* &operatorHead, StNode* &postfixHead){
+  vector<char*>::iterator it;
+  for(it = in_split_ptr->begin(); it != in_split_ptr->end(); ++it){
+    //First check if it is a digit, and push that
+    if(isdigit((*it)[0]) || (*it)[0] == '('){
+      pushStack((*it), postfixHead);
+    }else if((*it)[0] == ')'){ //Or if it is a close parenthesis, eject until open parenthesis
+      while(peepStack(operatorHead)[0] != '('){
+        popStack(operatorHead, operatorHead);
       }
-      temp[buf.size()] = '\0';
-      buf.clear();
-      if(isdigit(temp[0])){ //Check if the buffer currently holds a number
-        pushStack(temp, postfixHead);
-      }else if (operatorHead == NULL){ //Otherwise if the operator stack is empty, add the current charater
-        pushStack(temp, operatorHead);
-      }else if(input[a] == '('){  //If it is an open  parenthesis, just add it to the operator stack
-        pushStack(temp, operatorHead);
-      }else if(input[a] == ')'){
-        //Eject until the open parenthesis
-        while(peepStack(operatorHead)[0] != '('){
-          popStack(operatorHead, operatorHead);
-        }
-        buf.clear();
-      }else {
-        //Otherwise if it is an operator, get its prio and compare it with the operator stack. If the prio is greater, then add it, if it is less, then we need to keep on ejecting operators until a lower prio is found or we reach the end of the stack
-        while(getPrio(input[a]) <= getPrio(peepStack(operatorHead)[0])){
-          pushStack(popStack(operatorHead, operatorHead), postfixHead);
-        }
-        pushStack(temp, operatorHead);
+      popStack(operatorHead, operatorHead);
+    }else if((peepStack(operatorHead) == NULL)){ //Otherwise if it is an empty stack, add the operator
+      pushStack((*it), operatorHead);
+    }else { //Then if it is an operator, compare precedence, eject until precedence is greater than or equal. To do this, we use <= because we also need to add it at the end...
+      while(getPrio(((*it)[0]) <= getPrio(peepStack(operatorHead)[0]))){
+        pushStack(popStack(operatorHead, operatorHead), postfixHead);
       }
-    } else {
-      buf.push_back(input[a]);
-      cout << "pushing back " << input[a] << endl;
     }
   }
-  //If we've reached the end of the infix expression || it is empty, output the entire operator stack into the prefix expression
+  //If we're at the end of the stack, eject everything from the operator stack
   while(peepStack(operatorHead) != NULL){
     pushStack(popStack(operatorHead, operatorHead), postfixHead);
   }
+}
+
+void debugPrintVector(vector<char*>*in_split_ptr){
+  vector<char*>::iterator it;
+  for(it = in_split_ptr->begin(); it != in_split_ptr->end(); ++it){
+    cout << (*it) << ", ";
+  }
+  cout << endl;
 }
 
 int getPrio(char n){
@@ -128,6 +117,8 @@ int getPrio(char n){
     return 3;
   }else if(n == '^'){
     return 4;
+  }else if(n == '('){
+    return 5;
   }
   return 1;
 }
@@ -145,21 +136,43 @@ void pushStack(char* value, StNode* &current){
   }
 }
 
+
+void splitInput (vector<char*>*in_split_ptr, char* input, char delim){
+  char* buf = new char[strlen(input)]();
+  int counter = 0;
+
+  int inlen = strlen(input);
+  for(int a = 0; a < inlen; ++a){
+    if(input[a] != delim){
+      buf[counter++] = input[a];
+    }
+    if(input[a] == delim || a == inlen-1){
+      in_split_ptr->push_back(buf);
+      buf = new char[strlen(input)+1]();
+      counter = 0;
+    }
+  }
+}
+
 //To popStack EFFICIENTLY
 //We need to go through out entire stack from the head, or the beginning
 //We pass in the one before as a temp node, to avoid the overhead of having to scan forward every time
 char* popStack(StNode* &past, StNode* &current){
   if(current == NULL){
+    cout << "Current is null" << endl;
     return NULL;
   }
   if(current->getNext() != NULL){
+    cout << "This is not null" << endl;
     StNode* n = current->getNext();
     return popStack(current, n);
   }else{
-    char* t = current->getValue();
+    char* t = new char [strlen(current->getValue())];
+    strcpy(t, current->getValue());
     past->setNext(NULL);
     delete current;
     current = NULL;
+    cout << "t is " << t << endl;
     return t;
   }
 }
