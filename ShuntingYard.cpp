@@ -81,19 +81,25 @@ void convExp2Post(std::vector<char*>*in_split_ptr, StNode* &operatorHead, StNode
   vector<char*>::iterator it;
   for(it = in_split_ptr->begin(); it != in_split_ptr->end(); ++it){
     //First check if it is a digit, and push that
-    if(isdigit((*it)[0]) || (*it)[0] == '('){
+    if(isalnum((*it)[0])){
       pushStack((*it), postfixHead);
-    }else if((*it)[0] == ')'){ //Or if it is a close parenthesis, eject until open parenthesis
-      while(peepStack(operatorHead)[0] != '('){
-        popStack(operatorHead, operatorHead);
+    }else if ((*it)[0] == '('){ //Then check if it is a open parenthesis, if so add that to the stack
+      pushStack((*it), operatorHead); 
+    }else if((*it)[0] == ')'){ //Or if it is a close parenthesis, eject until open parenthesis, including.
+      while((peepStack(operatorHead)[0]) != '('){
+        pushStack(popStack(operatorHead, operatorHead), postfixHead);
       }
       popStack(operatorHead, operatorHead);
     }else if((peepStack(operatorHead) == NULL)){ //Otherwise if it is an empty stack, add the operator
       pushStack((*it), operatorHead);
     }else { //Then if it is an operator, compare precedence, eject until precedence is greater than or equal. To do this, we use <= because we also need to add it at the end...
-      while(getPrio(((*it)[0]) <= getPrio(peepStack(operatorHead)[0]))){
+      while(getPrio(((*it)[0])) <= getPrio(peepStack(operatorHead)[0])){
         pushStack(popStack(operatorHead, operatorHead), postfixHead);
+        if(peepStack(operatorHead) == NULL){
+          break;
+        }
       }
+      pushStack((*it), operatorHead);
     }
   }
   //If we're at the end of the stack, eject everything from the operator stack
@@ -111,16 +117,16 @@ void debugPrintVector(vector<char*>*in_split_ptr){
 }
 
 int getPrio(char n){
-  if(n == '+' || n == '-'){
+  if(n == '('){
+    return 1;
+  }else if(n == '+' || n == '-'){
     return 2;
   }else if(n == '*' || n == '/'){
     return 3;
   }else if(n == '^'){
     return 4;
-  }else if(n == '('){
-    return 5;
   }
-  return 1;
+  return 0;
 }
 
 void pushStack(char* value, StNode* &current){
@@ -163,7 +169,6 @@ char* popStack(StNode* &past, StNode* &current){
     return NULL;
   }
   if(current->getNext() != NULL){
-    cout << "This is not null" << endl;
     StNode* n = current->getNext();
     return popStack(current, n);
   }else{
@@ -172,7 +177,6 @@ char* popStack(StNode* &past, StNode* &current){
     past->setNext(NULL);
     delete current;
     current = NULL;
-    cout << "t is " << t << endl;
     return t;
   }
 }
