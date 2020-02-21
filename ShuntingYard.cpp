@@ -26,6 +26,10 @@ void convExp2Post(std::vector<char*>*in_split_ptr, StNode* &operatorStack, StNod
 void createTree(StNode*& postfixQueue, StBNode*& buffer);//To create a tree, we need the postfix queue, as well as a stack that will hold the binary tree conversion process...
 int getPrio(char n); // Get prio should deal with char
 
+void inorderTraversal(BNode* root);
+void preorderTraversal(BNode* root);
+void postorderTraversal(BNode* root);
+
 using namespace std;
 
 //Main function of ShuntingYard
@@ -45,6 +49,8 @@ int main(){
   StNode* postfixQueue = NULL;
   //Stack for binary expression tree that holds binary nodes to be used during conversion
   StBNode* buffer = NULL;
+  //Root node for binary expression tree that will be derived from the buffer
+  BNode* root = NULL;
 
   bool running = true;
 
@@ -64,16 +70,36 @@ int main(){
     cout << endl;
     //Make a binary tree using this postfix expression
     createTree(postfixQueue, buffer);
-
+    //Take the root note out of the stack
+    root = popBinaryStack(buffer, buffer);
     //Then, get what the user wants to convert the postfix into
     cout << "Please enter a number, (1) for infix, (2) for prefix, or (3) for postfix." << endl;
-    //DEBUG
-    BNode* temporary = popBinaryStack(buffer, buffer);
-    cout << temporary->getValue() << endl;
-    cout << temporary->getLeft()->getValue() << endl;
-    cout << temporary->getRight()->getValue() << endl;
-    //DEBUG
-    getInput(inptr);
+    int decide = 0;
+    cin >> decide;
+    cin.clear();
+    cin.ignore(999, '\n');
+    switch (decide){
+    case 1:
+      //We must do in-order traversal in this case...
+      cout << "Infix Equation: " << endl;
+      inorderTraversal(root);
+      break;
+    case 2:
+      //We must do pre-order traversal in this case...
+      cout << "Prefix Equation: " << endl;
+      preorderTraversal(root);
+      break;
+    case 3:
+      //We must do post-order traversal in this case...
+      cout << "Postfix Equation: " << endl;
+      postorderTraversal(root);
+      break;
+    default:
+      cout << "Invalid choice. Program will now exit!" << endl;
+      break;
+
+    }
+
     //Then, convert into what ever that is **l8r
     //conv2(inptr);
     //Print the post fix expression for now
@@ -127,21 +153,22 @@ void convExp2Post(std::vector<char*>*in_split_ptr, StNode* &operatorStack, StNod
 void createTree(StNode*& postfixQueue, StBNode*& buffer){
   //We gotta go through the queue and start to build our tree...
   while(postfixQueue != NULL){
-    //Not sure if parsing the input in this fashion will work
-    cout << "The value of the current postfix queue: " << postfixQueue->getValue() << endl;
+    //First, store the postfixQueue node value as a char*
     char* t = new char [strlen(postfixQueue->getValue())];
     strcpy(t, dequeue(postfixQueue));
-    cout << "Value of t is : " << t << endl;
     if(isalnum(t[0])){ //If it's an operand
       //Dynamically allocate it to a binary tree node and add that to the buffer stack
       pushBinaryStack(new BNode(t), buffer);
     }else{ 
       //Otherwise, still dynamically allocate it to a binary tree node
       BNode* temp = new BNode(t);
+      cout << "Root is: " << t << endl;
       //Pop off the top of the binary stack and add it to the right pointer
-      temp->setLeft(popBinaryStack(buffer, buffer));
-      //Pop off the next top of the binary stack and add it to the left pointer
       temp->setRight(popBinaryStack(buffer, buffer));
+      cout << "Right is: " << temp->getRight()->getValue() << endl;
+      //Pop off the next top of the binary stack and add it to the left pointer
+      temp->setLeft(popBinaryStack(buffer, buffer));
+      cout << "Left is: " << temp->getLeft()->getValue() << endl;
       pushBinaryStack(temp, buffer);
     }
   }
@@ -300,4 +327,53 @@ void printQueue(StNode* current){
     printQueue(n);
   }
 }
+
+//In preorder, we visit root, then the left subtree, then the right subtree.
+void preorderTraversal(BNode* root){
+  //If the tree is empty, get out!
+  if(root == NULL){
+    return;
+  }
+  //Print out the root
+  cout << root->getValue() << " ";
+  //Recurse through the left
+  preorderTraversal(root->getLeft());
+  //Recurse through the right
+  preorderTraversal(root->getRight());
+}
+
+//In postorder, we visit the left subtree, then the right subtree, then the root.
+void postorderTraversal(BNode* root){
+  //If the tree is empty, get out!
+  if(root == NULL){
+    return;
+  }
+  //Recurse through the left
+  postorderTraversal(root->getLeft());
+  //Recurse through the right
+  postorderTraversal(root->getRight());
+  //Print out the root
+  cout << root->getValue() << " ";
+}
+
+//In inorder, we visit the left subtree, then the root, then the right subtree
+void inorderTraversal(BNode* root){
+  //If the tree is empty, get out!
+  if(root == NULL){
+    return;
+  }
+  if (!isalnum(root->getValue()[0])){
+    cout << "( ";
+  }
+  //Recurse through the left
+  inorderTraversal(root->getLeft());
+  //Print out the root
+  cout << root->getValue() << " ";
+  //Recurse through the right
+  inorderTraversal(root->getRight());
+  if (!isalnum(root->getValue()[0])){
+    cout << ") ";
+  }
+}
+
 
