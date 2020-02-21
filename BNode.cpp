@@ -10,10 +10,6 @@ BNode::BNode(char* newValue){
 }
 
 BNode::~BNode(){
-  delete left;
-  left = NULL;
-  delete right;
-  right = NULL;
   delete[] value;
   value = NULL;
 }
@@ -22,7 +18,7 @@ char* BNode::getValue(){
   return value;
 }
 
-BNode* BNode:: getLeft(){
+BNode* BNode::getLeft(){
   return left;
 }
 

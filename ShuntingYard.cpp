@@ -1,4 +1,5 @@
-//USE DELIM + () TO DECLAR VECTORS
+//USE DELIMs FOR MODULARITY
+//() TO DECLARE VECTORS WITH NULL-TERMINATING CHARACTERS
 
 #include <iostream>
 #include <cstring>
@@ -6,18 +7,23 @@
 #include <iterator>
 #include "StNode.h"
 #include "BNode.h"
+#include "StBNode.h"
 
-void pushStack(char* value, StNode*& current); // Push stack should be char*
-char* popStack(StNode* &past, StNode* &current); // Pop stack should be char*
-char* peepStack(StNode* current); // Peep stack should be char*
-void printStack(StNode* current); // Print stack should be char*
+void pushStack(char* value, StNode*& current); //Adds to top of stack
+void pushBinaryStack(BNode* bNode, StBNode*& current); //Lazy
+char* popStack(StNode* &past, StNode* &current); //Takes from top of stack
+BNode* popBinaryStack(StBNode* &past, StBNode* &current); //Lazy
+char* peepStack(StNode* current); //Looks at top of stack
+void enqueue(char* value, StNode*& current);  //Adds to the rear of queue
+char* dequeue(StNode*& head); //Takes from the front of queue
+void printQueue(StNode* current);
 //void addBi();
 //void printBi();
 //void promptUser();
 void getInput(char* &inptr);
 void splitInput (std::vector<char*>*in_split_ptr, char* inptr, char delim);
-void debugPrintVector(std::vector<char*>*in_split_ptr);
-void convExp2Post(std::vector<char*>*in_split_ptr, StNode* &operatorHead, StNode* &postfixHead);
+void convExp2Post(std::vector<char*>*in_split_ptr, StNode* &operatorStack, StNode* &postfixQueue);
+void createTree(StNode*& postfixQueue, StBNode*& buffer);//To create a tree, we need the postfix queue, as well as a stack that will hold the binary tree conversion process...
 int getPrio(char n); // Get prio should deal with char
 
 using namespace std;
@@ -25,6 +31,7 @@ using namespace std;
 //Main function of ShuntingYard
 int main(){
   //Setup input
+
   char in[999];
   char* inptr = &in[0];
 
@@ -33,10 +40,11 @@ int main(){
   vector<char*>* in_split_ptr = &in_split;
 
   //Stack for postfix operators while converting
-  StNode* operatorHead = NULL;
-  //Stack for postfix output
-  StNode* postfixHead = NULL;
-  //Binary tree that we're nont really concerned with rn
+  StNode* operatorStack = NULL;
+  //QUEUE for postfix output
+  StNode* postfixQueue = NULL;
+  //Stack for binary expression tree that holds binary nodes to be used during conversion
+  StBNode* buffer = NULL;
 
   bool running = true;
 
@@ -47,17 +55,25 @@ int main(){
     getInput(inptr);
     //We need someway to split the operands and operators of the input by spaces
     splitInput(in_split_ptr, inptr, ' ');
-
-    //debug
-    debugPrintVector(in_split_ptr);
-
     //Then, convert into postfix
-    convExp2Post(in_split_ptr, operatorHead, postfixHead);
-    //Debug
-    cout << "Final result: ";
-    printStack(postfixHead);
-    //Then, get what the user wants to convert it into **l8r
-    //getInput(inptr);
+    convExp2Post(in_split_ptr, operatorStack, postfixQueue);
+    //Output postfix expression
+    //USING QUEUE
+    cout << "The postfix expression is: ";
+    printQueue(postfixQueue);
+    cout << endl;
+    //Make a binary tree using this postfix expression
+    createTree(postfixQueue, buffer);
+
+    //Then, get what the user wants to convert the postfix into
+    cout << "Please enter a number, (1) for infix, (2) for prefix, or (3) for postfix." << endl;
+    //DEBUG
+    BNode* temporary = popBinaryStack(buffer, buffer);
+    cout << temporary->getValue() << endl;
+    cout << temporary->getLeft()->getValue() << endl;
+    cout << temporary->getRight()->getValue() << endl;
+    //DEBUG
+    getInput(inptr);
     //Then, convert into what ever that is **l8r
     //conv2(inptr);
     //Print the post fix expression for now
@@ -77,43 +93,58 @@ void getInput(char* &inptr){
   }
 }
 
-void convExp2Post(std::vector<char*>*in_split_ptr, StNode* &operatorHead, StNode* &postfixHead){
+void convExp2Post(std::vector<char*>*in_split_ptr, StNode* &operatorStack, StNode* &postfixQueue){
   vector<char*>::iterator it;
   for(it = in_split_ptr->begin(); it != in_split_ptr->end(); ++it){
     //First check if it is a digit, and push that
     if(isalnum((*it)[0])){
-      pushStack((*it), postfixHead);
+      enqueue((*it), postfixQueue);
     }else if ((*it)[0] == '('){ //Then check if it is a open parenthesis, if so add that to the stack
-      pushStack((*it), operatorHead); 
+      pushStack((*it), operatorStack); 
     }else if((*it)[0] == ')'){ //Or if it is a close parenthesis, eject until open parenthesis, including.
-      while((peepStack(operatorHead)[0]) != '('){
-        pushStack(popStack(operatorHead, operatorHead), postfixHead);
+      while((peepStack(operatorStack)[0]) != '('){
+        enqueue(popStack(operatorStack, operatorStack), postfixQueue);
       }
-      popStack(operatorHead, operatorHead);
-    }else if((peepStack(operatorHead) == NULL)){ //Otherwise if it is an empty stack, add the operator
-      pushStack((*it), operatorHead);
+      popStack(operatorStack, operatorStack);
+    }else if((peepStack(operatorStack) == NULL)){ //Otherwise if it is an empty stack, add the operator
+      pushStack((*it), operatorStack);
     }else { //Then if it is an operator, compare precedence, eject until precedence is greater than or equal. To do this, we use <= because we also need to add it at the end...
-      while(getPrio(((*it)[0])) <= getPrio(peepStack(operatorHead)[0])){
-        pushStack(popStack(operatorHead, operatorHead), postfixHead);
-        if(peepStack(operatorHead) == NULL){
+      while(getPrio(((*it)[0])) <= getPrio(peepStack(operatorStack)[0])){
+        enqueue(popStack(operatorStack, operatorStack), postfixQueue);
+        if(peepStack(operatorStack) == NULL){
           break;
         }
       }
-      pushStack((*it), operatorHead);
+      pushStack((*it), operatorStack);
     }
   }
   //If we're at the end of the stack, eject everything from the operator stack
-  while(peepStack(operatorHead) != NULL){
-    pushStack(popStack(operatorHead, operatorHead), postfixHead);
+  while(peepStack(operatorStack) != NULL){
+    enqueue(popStack(operatorStack, operatorStack), postfixQueue);
   }
 }
 
-void debugPrintVector(vector<char*>*in_split_ptr){
-  vector<char*>::iterator it;
-  for(it = in_split_ptr->begin(); it != in_split_ptr->end(); ++it){
-    cout << (*it) << ", ";
+void createTree(StNode*& postfixQueue, StBNode*& buffer){
+  //We gotta go through the queue and start to build our tree...
+  while(postfixQueue != NULL){
+    //Not sure if parsing the input in this fashion will work
+    cout << "The value of the current postfix queue: " << postfixQueue->getValue() << endl;
+    char* t = new char [strlen(postfixQueue->getValue())];
+    strcpy(t, dequeue(postfixQueue));
+    cout << "Value of t is : " << t << endl;
+    if(isalnum(t[0])){ //If it's an operand
+      //Dynamically allocate it to a binary tree node and add that to the buffer stack
+      pushBinaryStack(new BNode(t), buffer);
+    }else{ 
+      //Otherwise, still dynamically allocate it to a binary tree node
+      BNode* temp = new BNode(t);
+      //Pop off the top of the binary stack and add it to the right pointer
+      temp->setLeft(popBinaryStack(buffer, buffer));
+      //Pop off the next top of the binary stack and add it to the left pointer
+      temp->setRight(popBinaryStack(buffer, buffer));
+      pushBinaryStack(temp, buffer);
+    }
   }
-  cout << endl;
 }
 
 int getPrio(char n){
@@ -142,6 +173,18 @@ void pushStack(char* value, StNode* &current){
   }
 }
 
+void pushBinaryStack(BNode* value, StBNode*& current){
+  if(current == NULL){
+    current = new StBNode(value);
+    return;
+  }
+  if(current->getNext() != NULL){
+    StBNode* n = current->getNext();
+    pushBinaryStack(value, n);
+  }else{
+    current->setNext(new StBNode(value));
+  }
+}
 
 void splitInput (vector<char*>*in_split_ptr, char* input, char delim){
   char* buf = new char[strlen(input)]();
@@ -181,6 +224,23 @@ char* popStack(StNode* &past, StNode* &current){
   }
 }
 
+BNode* popBinaryStack(StBNode* &past, StBNode* &current){
+  if(current == NULL){
+    cout << "Current is null" << endl;
+    return NULL;
+  }
+  if(current->getNext() != NULL){
+    StBNode* n = current->getNext();
+    return popBinaryStack(current, n);
+  }else{
+    BNode* temp = current->getValue();
+    past->setNext(NULL);
+    delete current;
+    current = NULL;
+    return temp;
+  }
+}
+
 char* peepStack(StNode* current){
   if(current == NULL){
     return NULL;
@@ -193,7 +253,43 @@ char* peepStack(StNode* current){
   }
 }
 
-void printStack(StNode* current){
+//We want to try and add this to the rear of the queue. The implementation for this looks very similar to push stack, but in the end it'll still be First in First out.
+void enqueue(char* value, StNode*& current){
+  if(current == NULL){
+    current = new StNode(value);
+    return;
+  }
+  if(current->getNext() != NULL){
+    StNode* n = current->getNext();
+    pushStack(value, n);
+  }else{
+    current->setNext(new StNode(value));
+  }
+}
+
+//We want to try and take from the front of the queue, so we'll be targetting the "head" node.
+char* dequeue(StNode*& head){
+  //If head is empty, return NULL
+  if(head == NULL){
+    return NULL;
+  }
+  //Otherwise, we'll store what Node comes after the head
+  StNode* t = head->getNext();
+  //Also the value that the head is holding
+  char* o = new char [strlen(head->getValue())];
+  strcpy(o, head->getValue());
+  //Then cutoff the head
+  head->setNext(NULL);
+  //Delete the head
+  delete head;
+  //Then make the temp node the new head.
+  head = t;
+  //Return the value that the head held
+  return o;
+}
+
+
+void printQueue(StNode* current){
   if(current == NULL){
     cout << "Empty stack" << endl;
     return;
@@ -201,6 +297,7 @@ void printStack(StNode* current){
   cout << current->getValue() << " ";
   if(current->getNext() != NULL){
     StNode* n = current->getNext();
-    printStack(n);
+    printQueue(n);
   }
 }
+
