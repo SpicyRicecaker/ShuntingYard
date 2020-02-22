@@ -1,3 +1,4 @@
+//This class is the exact same as StNode, except it holds BNodes instead of char* 
 #include <iostream>
 #include <cstring>
 #include "BNode.h"
@@ -11,7 +12,7 @@ StBNode::StBNode(BNode* newBNode){
 
 StBNode::~StBNode(){
   //delete bNode;
-  //bNode = NULL;
+  bNode = NULL;
 }
 
 StBNode* StBNode::getNext(){

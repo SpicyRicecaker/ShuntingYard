@@ -1,3 +1,4 @@
+//Header file for StNode
 #ifndef STNODE_H
 #define STNODE_H
 

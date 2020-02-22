@@ -1,41 +1,41 @@
-//USE DELIMs FOR MODULARITY
-//() TO DECLARE VECTORS WITH NULL-TERMINATING CHARACTERS
+/*
+  Author: Andy Li
+  Date: 2/21/2020
+  ShuntingYard: A program that takes in an infix expression from user input, converts that into a postfix expression using the Shunting Yard algorithm, creates a binary expression tree using this postfix expression, and then outputs the user's choice of infix, postfix, or prefix using different traversal methods.
+ */
+
 
 #include <iostream>
 #include <cstring>
 #include <vector>
 #include <iterator>
-#include "StNode.h"
-#include "BNode.h"
-#include "StBNode.h"
+#include "StNode.h" //Stack/Queue node class
+#include "BNode.h" //Binary Tree node class
+#include "StBNode.h" //Stack that holds binary tree nodes class
 
 void pushStack(char* value, StNode*& current); //Adds to top of stack
-void pushBinaryStack(BNode* bNode, StBNode*& current); //Lazy
+void pushBinaryStack(BNode* bNode, StBNode*& current); //Push stack except for STBNodes
 char* popStack(StNode* &past, StNode* &current); //Takes from top of stack
-BNode* popBinaryStack(StBNode* &past, StBNode* &current); //Lazy
+BNode* popBinaryStack(StBNode* &past, StBNode* &current); //Pop stack except for STBNodes
 char* peepStack(StNode* current); //Looks at top of stack
 void enqueue(char* value, StNode*& current);  //Adds to the rear of queue
 char* dequeue(StNode*& head); //Takes from the front of queue
-void printQueue(StNode* current);
-//void addBi();
-//void printBi();
-//void promptUser();
-void getInput(char* &inptr);
-void splitInput (std::vector<char*>*in_split_ptr, char* inptr, char delim);
+void printQueue(StNode* current); //Prints the current queue from front to back
+void getInput(char* &inptr); //Gets user input
+void splitInput (std::vector<char*>*in_split_ptr, char* inptr, char delim); //Splits infix expression by delim (this case spaces) 
 void convExp2Post(std::vector<char*>*in_split_ptr, StNode* &operatorStack, StNode* &postfixQueue);
 void createTree(StNode*& postfixQueue, StBNode*& buffer);//To create a tree, we need the postfix queue, as well as a stack that will hold the binary tree conversion process...
-int getPrio(char n); // Get prio should deal with char
-
+int getPrio(char n); // Finds the priority of something given an operator
 void inorderTraversal(BNode* root);
 void preorderTraversal(BNode* root);
 void postorderTraversal(BNode* root);
+void postorderDeletion(BNode*& root);
 
 using namespace std;
 
 //Main function of ShuntingYard
 int main(){
   //Setup input
-
   char in[999];
   char* inptr = &in[0];
 
@@ -54,17 +54,16 @@ int main(){
 
   bool running = true;
 
-  //Main program loop, get user input, convert into postfix, ask for desired output, then output
+  //Main program loop, get user input, convert into postfix, create expression tree, ask for desired output, then output
   while(running){
     cout << "Please enter an infix expression..." << endl;
     //First, get expression input
     getInput(inptr);
-    //We need someway to split the operands and operators of the input by spaces
+    //Then split input
     splitInput(in_split_ptr, inptr, ' ');
     //Then, convert into postfix
     convExp2Post(in_split_ptr, operatorStack, postfixQueue);
-    //Output postfix expression
-    //USING QUEUE
+    //Print postfix expression using the created QUEUE
     cout << "The postfix expression is: ";
     printQueue(postfixQueue);
     cout << endl;
@@ -97,18 +96,24 @@ int main(){
     default:
       cout << "Invalid choice. Program will now exit!" << endl;
       break;
-
     }
-
-    //Then, convert into what ever that is **l8r
-    //conv2(inptr);
-    //Print the post fix expression for now
-    //printSt(poHead);
-    break;
+    //After that, we need to reset everything for the next infix expression
+    //Reset split vector
+    in_split.clear();
+    //Reset postfix queue
+    while(postfixQueue != NULL){
+      dequeue(postfixQueue);
+    }
+    //Delete buffer and set it to NULL
+    delete buffer;
+    buffer = NULL;
+    //Postorder step through the entire binary expression tree to delete everything
+    postorderDeletion(root);
   }
   return 0;
 }
 
+//This function simply takes user input and edits the inptr accordingly
 void getInput(char* &inptr){
   while(true){
     cin.getline(inptr, 999);
@@ -119,8 +124,10 @@ void getInput(char* &inptr){
   }
 }
 
+//ConvExp2Post is a function that uses the shuntingyard algorithm to convert an infix expresion into postfix
 void convExp2Post(std::vector<char*>*in_split_ptr, StNode* &operatorStack, StNode* &postfixQueue){
   vector<char*>::iterator it;
+  //First we iterate through all of our operators and operands, taking from the in_split vector
   for(it = in_split_ptr->begin(); it != in_split_ptr->end(); ++it){
     //First check if it is a digit, and push that
     if(isalnum((*it)[0])){
@@ -144,12 +151,13 @@ void convExp2Post(std::vector<char*>*in_split_ptr, StNode* &operatorStack, StNod
       pushStack((*it), operatorStack);
     }
   }
-  //If we're at the end of the stack, eject everything from the operator stack
+  //If we're at the end of the stack, eject everything from the operator stack onto the postfix queue
   while(peepStack(operatorStack) != NULL){
     enqueue(popStack(operatorStack, operatorStack), postfixQueue);
   }
 }
 
+//This function creates a binary tree, utilizing a stack, and our postfix queue
 void createTree(StNode*& postfixQueue, StBNode*& buffer){
   //We gotta go through the queue and start to build our tree...
   while(postfixQueue != NULL){
@@ -162,18 +170,17 @@ void createTree(StNode*& postfixQueue, StBNode*& buffer){
     }else{ 
       //Otherwise, still dynamically allocate it to a binary tree node
       BNode* temp = new BNode(t);
-      cout << "Root is: " << t << endl;
       //Pop off the top of the binary stack and add it to the right pointer
       temp->setRight(popBinaryStack(buffer, buffer));
-      cout << "Right is: " << temp->getRight()->getValue() << endl;
       //Pop off the next top of the binary stack and add it to the left pointer
       temp->setLeft(popBinaryStack(buffer, buffer));
-      cout << "Left is: " << temp->getLeft()->getValue() << endl;
+      //Finally, push that to the stack
       pushBinaryStack(temp, buffer);
     }
   }
 }
 
+//This function finds the precendence of operators, and returns them as predefined ints
 int getPrio(char n){
   if(n == '('){
     return 1;
@@ -187,19 +194,24 @@ int getPrio(char n){
   return 0;
 }
 
+//Pushes value to top of stack
 void pushStack(char* value, StNode* &current){
+  //If stack is empty, add as head
   if(current == NULL){
     current = new StNode(value);
     return;
   }
+  //Otherwise, loop through the entire stack until we get to the top
   if(current->getNext() != NULL){
     StNode* n = current->getNext();
     pushStack(value, n);
   }else{
+    //Then add
     current->setNext(new StNode(value));
   }
 }
 
+//Pushes Binary Tree node to the top of stack, using the exact same methods as pushstack
 void pushBinaryStack(BNode* value, StBNode*& current){
   if(current == NULL){
     current = new StBNode(value);
@@ -251,6 +263,7 @@ char* popStack(StNode* &past, StNode* &current){
   }
 }
 
+//Same exact thing as popstack, except handling binary tree nodes
 BNode* popBinaryStack(StBNode* &past, StBNode* &current){
   if(current == NULL){
     cout << "Current is null" << endl;
@@ -268,14 +281,18 @@ BNode* popBinaryStack(StBNode* &past, StBNode* &current){
   }
 }
 
+//Checks the top of the stack
 char* peepStack(StNode* current){
+  //If empty return, 
   if(current == NULL){
     return NULL;
   }
+  //Otherwise get to the top
   if(current->getNext() != NULL){
     StNode* n = current->getNext();
     return peepStack(n);
   }else{
+    //Output
     return current->getValue();
   }
 }
@@ -315,12 +332,14 @@ char* dequeue(StNode*& head){
   return o;
 }
 
-
+//Outputs the queue from front to rear
 void printQueue(StNode* current){
+  //If empty return, 
   if(current == NULL){
     cout << "Empty stack" << endl;
     return;
   }
+  //Otherwise output, get next, then output again, recurse
   cout << current->getValue() << " ";
   if(current->getNext() != NULL){
     StNode* n = current->getNext();
@@ -376,4 +395,19 @@ void inorderTraversal(BNode* root){
   }
 }
 
-
+//In postorder deletion, we just follow postorder traversal except instead of printing, we just delete the root node when we find them
+void postorderDeletion(BNode*& root){
+  //If the tree is empty, we're done deleting!
+  if(root == NULL){
+    return;
+  }
+  //Recurse through the left
+  BNode* l = root->getLeft();
+  postorderDeletion(l);
+  //Recurse through the right
+  BNode* r = root->getRight();
+  postorderDeletion(r);
+  //Delete root node
+  //Set it pointing to nothing
+  root = NULL;
+}

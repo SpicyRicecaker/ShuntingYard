@@ -2,6 +2,7 @@
 #include <cstring>
 #include "BNode.h"
 
+//Takes in char*
 BNode::BNode(char* newValue){
   value = new char[strlen(newValue)];
   strcpy(value, newValue);
@@ -9,11 +10,13 @@ BNode::BNode(char* newValue){
   right = NULL;
 }
 
+//Deletes char* 
 BNode::~BNode(){
   delete[] value;
   value = NULL;
 }
 
+//Getters and setters for left and right nodes
 char* BNode::getValue(){
   return value;
 }

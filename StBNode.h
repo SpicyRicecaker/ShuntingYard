@@ -1,3 +1,4 @@
+//Header file for StBNode. Again, very similar to StNode, just handling Binary tree nodes instead of char*
 #ifndef STBNODE_H
 #define STBNODE_H
 
